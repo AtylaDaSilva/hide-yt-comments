@@ -6,7 +6,7 @@
   "version": "1.0",
   "content_scripts": [
     {
-        "matches": ["*://www.youtube.com/watch?v=*"],
+        "matches": ["*://www.youtube.com/watch?v=*", "*://m.youtube.com/watch?v=*"],
         "js": ["script.js"]
     }
   ],
