@@ -3,7 +3,7 @@
   "manifest_version": 2,
   "name": "Hide YouTube Comments",
   "description": "Adds a button that allows you to hide or show the comment section on YouTube videos, which will be hidden by default.",
-  "version": "1.0",
+  "version": "2.0",
   "content_scripts": [
     {
         "matches": ["*://www.youtube.com/watch?v=*", "*://m.youtube.com/watch?v=*"],
