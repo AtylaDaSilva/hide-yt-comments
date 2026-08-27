@@ -11,13 +11,15 @@ async function retryOnException(
         throw new Error(`maxAttempts must be >= 1, got ${maxAttempts}`)
     }
 
-    for (let i = 1; i <= maxAttempts; i ++) {
+    for (let i = 1; i <= maxAttempts; i++) {
         try{
             return func()
         } catch (err) {
             if (i === maxAttempts) {
+                console.error(`HIDE-YT-COMMENTS: Attempt ${i}/${maxAttempts} failed. Throwing error.`)
                 throw err;
             }
+            console.warn(`HIDE-YT-COMMENTS: Attempt ${i}/${maxAttempts} failed. Retrying...`)
             if (pollingSeconds) {
                 await sleep(pollingSeconds * 1000)
             }
@@ -26,6 +28,7 @@ async function retryOnException(
 }
 
 function render_mobile_btn() {
+    console.log("HIDE-YT-COMMENTS: Rendering Hide/Show button...");
     const btn = document.createElement("button");
     btn.id = "show-comments-btn";
     btn.textContent = "Show/Hide comments";
@@ -73,6 +76,7 @@ function render_mobile_btn() {
 }
 
 function render_desktop_btn() {
+    console.log("HIDE-YT-COMMENTS: Rendering Hide/Show button...");
     const btn = document.createElement("button");
     btn.id = "show-comments-btn";
     btn.textContent = "Show/Hide comments";
@@ -122,6 +126,9 @@ function run_desktop_logic() {
     console.log("HIDE-YT-COMMENTS: Running desktop logic...")
     const commSection = document.querySelector("#comments");
     const comments = commSection.querySelector("#sections");
+
+    if (!comments) throw new Error();
+
     comments.style.display = 'none';
 
     // Avoid adding a duplicate button on repeated calls
@@ -132,26 +139,41 @@ function run_desktop_logic() {
     const btn = render_desktop_btn()
 
     commSection.prepend(btn);
+
+    console.log("HIDE-YT-COMMENTS: Desktop comments section hidden.");
 }
 
 function run_mobile_logic() {
     console.log("HIDE-YT-COMMENTS: Running mobile logic...")
     const commSectionContainer = document.querySelector(".ytVideoMetadataCarouselViewModelHost")
-    const commSection = document.querySelector(".ytCommentTeaserCarouselItemViewModelHost");
-    const comments = commSection.querySelectorAll(".ytCommentsEntryPointTeaserViewModelHost");
+
+    if (!commSectionContainer) throw new Error();
+
     commSectionContainer.style.display = 'none';
 
     // Avoid adding a duplicate button on repeated calls
-    if (commSection.querySelector("#show-comments-btn")) {
+    if (commSectionContainer.parentElement.querySelector("#show-comments-btn")) {
         return;
     }
 
     const btn = render_mobile_btn();
 
     commSectionContainer.parentElement.prepend(btn);
+    console.log("HIDE-YT-COMMENTS: Mobile comments section hidden.");
+}
+
+function isWatchPage() {
+    return window.location.pathname === "/watch" && new URLSearchParams(window.location.search).has("v");
 }
 
 function main() {
+    if (!isWatchPage()) {
+        // Avoids running the script on non-video pages
+        // Implemented this redundancy because the script kept running on the homepage and other non-video pages on mobile.
+        console.warn("HIDE-YT-COMMENTS: Not a watch page. Nothing to hide here.");
+        return;
+    }
+
     console.log("HIDE-YT-COMMENTS: Hiding comments section...");
     url = window.location.hostname.toLowerCase();
     const mobileUrl = "m.youtube.com";
@@ -170,9 +192,6 @@ function main() {
 }
 
 retryOnException(main, 300, 1)
-.then(() => {
-    console.log("HIDE-YT-COMMENTS: Comments section hidden.")
-})
 .catch(err => {
     console.error("HIDE-YT-COMMENTS: Unexpected error ", err);
 })
